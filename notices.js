@@ -1,10 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
-import { PrismaClient } from "@prisma/client";
 
 const App = express();
-// const prisma = new PrismaClient();
 
 const resultDotenv = dotenv.config();
 
