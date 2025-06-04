@@ -20,6 +20,102 @@ App.post("/preferences", async (req, res) => {
   const { email, category } = req.body;
 
   if (!email || !category) {
+    return res.status(400).json({
+      message: "Todos os campos precisam ser preenchidos!",
+    });
+  }
+
+  if (!Array.isArray(category)) {
+    return res
+      .status(400)
+      .json({ erro: "Formato inválido. Esperado um array de categorias." });
+  }
+
+  const expectedCategories = [
+    "business",
+    "entertainment",
+    "health",
+    "science",
+    "sports",
+    "technology",
+  ];
+
+  const categoriasValidas = category.every((cat) =>
+    expectedCategories.includes(cat.toLowerCase())
+  );
+
+  if (!categoriasValidas) {
+    return res.status(400).json({
+      message: "Categoria inválida!",
+    });
+  }
+
+  const findUser = await prisma.user.findFirst({
+    where: {
+      email: email,
+    },
+  });
+
+  if (!findUser) {
+    return res.status(400).json({
+      message: "Conta não encontrada!",
+    });
+  }
+
+  if (!verifyEmail.test(email)) {
+    return res.status(400).json({
+      message: "E-mail precisa ser válido!",
+    });
+  }
+
+  try {
+    const existingPreferences = await prisma.preference.findMany({
+      where: { userEmail: email },
+      select: { category: true },
+    });
+
+    const existingCategories = existingPreferences.map((pref) =>
+      pref.category.toLowerCase()
+    );
+
+    const newCategories = category.filter(
+      (cat) => !existingCategories.includes(cat.toLowerCase())
+    );
+
+    if (newCategories.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Todas as categorias já foram adicionadas." });
+    }
+
+    await Promise.all(
+      newCategories.map(async (cat) => {
+        await prisma.preference.create({
+          data: {
+            category: cat.toLowerCase(),
+            userEmail: email,
+          },
+        });
+      })
+    );
+
+    return res.status(200).json({
+      message: "Preferências criadas com sucesso!",
+      adicionadas: newCategories,
+    });
+  } catch (erro) {
+    console.error("Erro ao criar categorias:", erro);
+    return res
+      .status(500)
+      .json({ erro: "Deu ruim ao salvar categorias." });
+  }
+});
+
+
+App.post("/preferences-remove", async (req, res) => {
+  const { email, category } = req.body;
+
+  if (!email || !category) {
     res.status(400).json({
       message: "Todos os campos precisam ser preenchidos!",
     });
@@ -70,8 +166,8 @@ App.post("/preferences", async (req, res) => {
   try {
     await Promise.all(
       category.map(async (cat) => {
-        return await prisma.preference.create({
-          data: {
+        return await prisma.preference.deleteMany({
+          where: {
             category: cat,
             userEmail: email,
           },
@@ -79,12 +175,12 @@ App.post("/preferences", async (req, res) => {
       })
     );
   } catch (erro) {
-    console.error("Erro ao criar categorias:", erro);
+    console.error("Erro ao deletar categorias:", erro);
     res.status(500).json({ erro: "Deu ruim ao salvar categorias." });
   }
 
   return res.status(200).json({
-    message: "Preference criada com sucesso!",
+    message: "Preference deletada com sucesso!",
   });
 });
 
