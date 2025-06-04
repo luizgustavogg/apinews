@@ -89,7 +89,7 @@ App.post("/preferences", async (req, res) => {
 });
 
 App.get("/news-preferences", async (req, res) => {
-  const email = req.query.email;
+  const {email} = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "Email é obrigatório" });
@@ -110,7 +110,7 @@ App.get("/news-preferences", async (req, res) => {
 
     console.log("Preferências do usuário:", preferencesUser);
 
-    const accessKey = process.env.MEDIASTACK_ACCESS_KEY;
+    const accessKey = process.env.accessKey;
 
     const url = `https://api.mediastack.com/v1/news?access_key=${accessKey}&countries=br&categories=${preferencesUser}&limit=100`;
 
