@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-notices": "node --watch notices.js",
-    "dev-user": "node --watch user.js"
+    "dev-user": "node --watch user.js",
+    "dev-preference": "node --watch preferences.js"
   },
   "keywords": [],
   "author": "",

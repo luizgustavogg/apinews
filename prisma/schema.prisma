@@ -19,4 +19,12 @@ model user{
   username String
   email String @unique
   password String
+  preferences preference[]
+}
+
+model preference{
+  id Int @unique @default(autoincrement())
+  category String
+  userEmail String
+  user user @relation(fields: [userEmail], references: [email])
 }
