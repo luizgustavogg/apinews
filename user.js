@@ -2,22 +2,101 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-
+import passport, { Passport } from "passport";
+import session from "express-session";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 const App = express();
 const prisma = new PrismaClient();
 
 App.use(express.json());
+const SECRET = process.env.TOKEN;
+
+App.use(
+  session({
+    secret: SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+App.use(passport.initialize());
+App.use(passport.session());
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALL_BACK_URL,
+      scope: ["email", "profile"],
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, profile);
+    }
+  )
+);
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
 var verifySpecialCharacters = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-var verifySpace = /\s/g;
 var verifyEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const SECRET = process.env.TOKEN;
 
 export function sha256(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
+
+App.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["email", "profile"],
+  })
+);
+
+App.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  async (req, res) => {
+    const { displayName, emails } = req.user;
+    const email = emails[0].value;
+
+    let user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          username: displayName,
+          email: email,
+          password: sha256(crypto.randomBytes(16).toString("hex")),
+        },
+      });
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.user }, SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({
+      message: "Login realizado com sucesso!",
+      username: displayName,
+      email: email,
+      token: token,
+    });
+  }
+);
+
+App.get("/logout", (req, res) => {
+  req.logOut(() => {
+    return res.status(200).json({
+      message: "Conta Deslogada com sucesso!",
+    });
+  });
+});
 
 App.post("/register", async (req, res) => {
   const { username, email, password } = req.body;

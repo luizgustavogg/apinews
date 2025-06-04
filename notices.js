@@ -16,12 +16,6 @@ const API_URL = process.env.API_URL
 
 App.use(express.json());
 
-App.post("/register", async (req, res) => {
-
-
-
-})
-
 App.get("/news-recent-image", async (req, res) => {
   try {
     const response = await axios.get(API_URL);
