@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
 import serverless from "serverless-http";
+import prisma from "../libs/prisma";
 
 dotenv.config();
 

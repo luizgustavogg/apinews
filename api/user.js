@@ -6,7 +6,8 @@ import session from "express-session";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import serverless from "serverless-http";
 import dotenv from "dotenv";
-import '../libs/prisma'
+import prisma from "../libs/prisma";
+
 dotenv.config();  
 
 const app = express();
