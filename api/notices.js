@@ -83,3 +83,4 @@ categories.forEach(({ path, env }) => {
 });
 
 export const handler = serverless(app);
+export default app;

@@ -155,5 +155,5 @@ app.post("/login", async (req, res) => {
   });
 });
 
-// Exporta handler pra Vercel
 export const handler = serverless(app);
+export default app;

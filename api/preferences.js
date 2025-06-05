@@ -182,3 +182,4 @@ app.get("/news-preferences", async (req, res) => {
 });
 
 export const handler = serverless(app);
+export default app;
