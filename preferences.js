@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 import axios from 'axios';
 
 App.use(express.json());
-
+const router = express.Router();
 const resultDotenv = dotenv.config();
 
 if (resultDotenv.error) {
@@ -232,3 +232,4 @@ App.get("/news-preferences", async (req, res) => {
 
 
 App.listen(3000);
+export default router;

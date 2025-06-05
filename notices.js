@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
-
+const router = express.Router();
 const App = express();
 
 const resultDotenv = dotenv.config();
@@ -143,3 +143,6 @@ App.get("/news-technology", async (req, res) => {
 });
 
 App.listen(3000);
+
+
+export default router;

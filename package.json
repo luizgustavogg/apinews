@@ -5,16 +5,18 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch api.js",
     "dev-notices": "node --watch notices.js",
     "dev-user": "node --watch user.js",
-    "dev-preference": "node --watch preferences.js"
+    "dev-preference": "node --watch preferences.js",
+    "vercel-build": "npx prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^6.9.0",
     "axios": "^1.9.0",
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
@@ -24,5 +26,8 @@
     "newsapi": "^2.4.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.9.0"
   }
 }

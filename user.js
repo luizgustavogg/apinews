@@ -8,7 +8,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 const App = express();
 const prisma = new PrismaClient();
-
+const router = express.Router();
 App.use(express.json());
 const SECRET = process.env.TOKEN;
 
@@ -186,3 +186,4 @@ App.post("/login", async (req, res) => {
 });
 
 App.listen(3000);
+export default router;
