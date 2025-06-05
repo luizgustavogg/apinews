@@ -4,12 +4,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --watch api.js",
     "dev-notices": "node --watch notices.js",
     "dev-user": "node --watch user.js",
     "dev-preference": "node --watch preferences.js",
-    "vercel-build": "npx prisma migrate deploy"
+
+    "vercel-build": "prisma generate",
+
+    "generate": "prisma generate"
   },
   "keywords": [],
   "author": "",

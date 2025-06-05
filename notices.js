@@ -1,26 +1,30 @@
 import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
-const router = express.Router();
-const App = express();
+import serverless from "serverless-http";
 
-const resultDotenv = dotenv.config();
+dotenv.config();
 
-if (resultDotenv.error) {
-  throw resultDotenv.error;
+const app = express();
+app.use(express.json());
+
+const API_URL = process.env.API_URL;
+
+async function fetchAndFilterArticles(url, withImage = true) {
+  try {
+    const response = await axios.get(url);
+    let articles = response.data.data;
+    articles = articles.filter(article => withImage ? article.image !== null : article.image == null);
+    return articles;
+  } catch (error) {
+    console.error("Erro ao puxar da API:", error.message);
+    throw new Error("Erro ao puxar notícias.");
+  }
 }
 
-const API_URL = process.env.API_URL
-
-App.use(express.json());
-
-App.get("/news-recent-image", async (req, res) => {
+app.get("/news-recent-image", async (req, res) => {
   try {
-    const response = await axios.get(API_URL);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-    
-    // Separar por categoria
+    const articles = await fetchAndFilterArticles(API_URL, true);
 
     const categorized = articles.reduce((acc, article) => {
       const cat = article.category || "uncategorized";
@@ -31,18 +35,13 @@ App.get("/news-recent-image", async (req, res) => {
 
     res.json(categorized);
   } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
+    res.status(500).json({ error: error.message });
   }
 });
 
-App.get("/news-recent", async (req, res) => {
+app.get("/news-recent", async (req, res) => {
   try {
-    const response = await axios.get(API_URL);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image == null);
-    
-    // Separar por categoria
+    const articles = await fetchAndFilterArticles(API_URL, false);
 
     const categorized = articles.reduce((acc, article) => {
       const cat = article.category || "uncategorized";
@@ -53,96 +52,34 @@ App.get("/news-recent", async (req, res) => {
 
     res.json(categorized);
   } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
+    res.status(500).json({ error: error.message });
   }
 });
 
-App.get("/news-business", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_BUSINESS);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
+const categories = [
+  { path: "/news-business", env: "API_URL_CATEGORY_BUSINESS" },
+  { path: "/news-entertainment", env: "API_URL_CATEGORY_ENTERTAINMENT" },
+  { path: "/news-health", env: "API_URL_CATEGORY_HEALTH" },
+  { path: "/news-science", env: "API_URL_CATEGORY_SCIENCE" },
+  { path: "/news-sports", env: "API_URL_CATEGORY_SPORTS" },
+  { path: "/news-technology", env: "API_URL_CATEGORY_TECHNOLOGY" },
+];
 
-    res.json(articles);
+// Gera rotas dinâmicas pra cada categoria
+categories.forEach(({ path, env }) => {
+  app.get(path, async (req, res) => {
+    try {
+      const url = process.env[env];
+      if (!url) {
+        return res.status(500).json({ error: `Variável de ambiente ${env} não configurada.` });
+      }
 
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
+      let articles = await fetchAndFilterArticles(url, true);
+      res.json(articles);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 });
 
-App.get("/news-entertainment", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_ENTERTAINMENT);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-
-    res.json(articles);
-
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
-});
-
-App.get("/news-health", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_HEALTH);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-
-    res.json(articles);
-
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
-});
-
-App.get("/news-science", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_SCIENCE);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-
-    res.json(articles);
-
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
-});
-
-App.get("/news-sports", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_SPORTS);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-
-    res.json(articles);
-
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
-});
-
-App.get("/news-technology", async (req, res) => {
-  try {
-    const response = await axios.get(process.env.API_URL_CATEGORY_TECHNOLOGY);
-    let articles = response.data.data;
-    articles = articles.filter((article) => article.image !== null);
-
-    res.json(articles);
-
-  } catch (error) {
-    console.error("Erro ao puxar da API:", error.message);
-    res.status(500).json({ error: "Erro ao puxar notícias." });
-  }
-});
-
-App.listen(3000);
-
-
-export default router;
+export const handler = serverless(app);

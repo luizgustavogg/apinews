@@ -2,17 +2,20 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import passport, { Passport } from "passport";
+import passport from "passport";
 import session from "express-session";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import serverless from "serverless-http";
+import dotenv from "dotenv";
+dotenv.config();
 
-const App = express();
+const app = express();
 const prisma = new PrismaClient();
-const router = express.Router();
-App.use(express.json());
+app.use(express.json());
+
 const SECRET = process.env.TOKEN;
 
-App.use(
+app.use(
   session({
     secret: SECRET,
     resave: false,
@@ -20,8 +23,8 @@ App.use(
   })
 );
 
-App.use(passport.initialize());
-App.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
 
 passport.use(
   new GoogleStrategy(
@@ -40,150 +43,117 @@ passport.use(
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
-var verifySpecialCharacters = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-var verifyEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const verifySpecialCharacters = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+const verifyEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function sha256(password) {
+function sha256(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-App.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["email", "profile"],
-  })
-);
+// Rotas Google
+app.get("/auth/google", passport.authenticate("google", {
+  scope: ["email", "profile"],
+}));
 
-App.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  async (req, res) => {
-    const { displayName, emails } = req.user;
-    const email = emails[0].value;
+app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), async (req, res) => {
+  const { displayName, emails } = req.user;
+  const email = emails[0].value;
 
-    let user = await prisma.user.findFirst({
-      where: {
-        email: email,
+  let user = await prisma.user.findFirst({
+    where: { email }
+  });
+
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        username: displayName,
+        email,
+        password: sha256(crypto.randomBytes(16).toString("hex")),
       },
     });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          username: displayName,
-          email: email,
-          password: sha256(crypto.randomBytes(16).toString("hex")),
-        },
-      });
-    }
-
-    const token = jwt.sign({ id: user.id, username: user.user }, SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.status(200).json({
-      message: "Login realizado com sucesso!",
-      username: displayName,
-      email: email,
-      token: token,
-    });
   }
-);
 
-App.get("/logout", (req, res) => {
-  req.logOut(() => {
-    return res.status(200).json({
-      message: "Conta Deslogada com sucesso!",
-    });
+  const token = jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: "1h" });
+
+  res.status(200).json({
+    message: "Login realizado com sucesso!",
+    username: displayName,
+    email,
+    token,
   });
 });
 
-App.post("/register", async (req, res) => {
+app.get("/logout", (req, res) => {
+  req.logout(() => {
+    return res.status(200).json({ message: "Conta deslogada com sucesso!" });
+  });
+});
+
+// Registro
+app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
   const passwordHashed = sha256(password);
 
   if (!username || !email || !password) {
-    return res.status(400).json({
-      message: "Todos os campos precisam ser preenchidos!",
-    });
+    return res.status(400).json({ message: "Todos os campos precisam ser preenchidos!" });
   }
 
-  const findUser = await prisma.user.findFirst({
-    where: {
-      email: email,
-    },
-  });
+  const findUser = await prisma.user.findFirst({ where: { email } });
 
   if (findUser) {
-    return res.status(400).json({
-      message: "Ja existe uma conta com este email!",
-    });
+    return res.status(400).json({ message: "Já existe uma conta com este email!" });
   }
 
   if (verifySpecialCharacters.test(username)) {
-    return res.status(400).json({
-      message: "O Nome não pode conter caracteres especiais!",
-    });
+    return res.status(400).json({ message: "O nome não pode conter caracteres especiais!" });
   }
 
   if (!verifyEmail.test(email)) {
-    return res.status(400).json({
-      message: "E-mail precisa ser valido!",
-    });
+    return res.status(400).json({ message: "E-mail precisa ser válido!" });
   }
 
   if (password.length < 8) {
-    return res.status(400).json({
-      message: "A senha precisa conter pelo menos 8 caracteres!",
-    });
+    return res.status(400).json({ message: "A senha precisa conter pelo menos 8 caracteres!" });
   }
 
-  const createUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
-      username: username,
-      email: email,
+      username,
+      email,
       password: passwordHashed,
     },
   });
 
-  return res.status(200).json({
-    message: "Conta registrada com sucesso!",
-  });
+  return res.status(200).json({ message: "Conta registrada com sucesso!" });
 });
 
-App.post("/login", async (req, res) => {
+// Login
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const passwordHashed = sha256(password);
 
   if (!email || !password) {
-    return res.status(400).json({
-      message: "Todos os campos precisam ser preenchidos!",
-    });
+    return res.status(400).json({ message: "Todos os campos precisam ser preenchidos!" });
   }
 
   const findUser = await prisma.user.findFirst({
     where: {
-      email: email,
+      email,
       password: passwordHashed,
     },
   });
 
   if (!findUser) {
-    return res.status(400).json({
-      message: "Credenciais não conferem!",
-    });
+    return res.status(400).json({ message: "Credenciais não conferem!" });
   }
 
-  const token = jwt.sign(
-    { id: findUser.id, username: findUser.username },
-    SECRET,
-    { expiresIn: "1h" }
-  );
+  const token = jwt.sign({ id: findUser.id, username: findUser.username }, SECRET, { expiresIn: "1h" });
+
   return res.status(200).json({
     message: "Login realizado com sucesso!",
-    token: token,
+    token,
   });
 });
 
-App.listen(3000);
-export default router;
+// Exporta handler pra Vercel
+export const handler = serverless(app);
