@@ -25,7 +25,8 @@
     "jsonwebtoken": "^9.0.2",
     "newsapi": "^2.4.1",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "serverless-http": "^3.2.0"
   },
   "devDependencies": {
     "prisma": "^6.9.0"
