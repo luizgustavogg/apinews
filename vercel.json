@@ -1,15 +1,9 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/index.js", "use": "@vercel/node" },
-    { "src": "api/user.js", "use": "@vercel/node" },
-    { "src": "api/notices.js", "use": "@vercel/node" },
-    { "src": "api/preferences.js", "use": "@vercel/node" }
+    { "src": "api/index.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api", "dest": "api/index.js" },
-    { "src": "/user", "dest": "api/user.js" },
-    { "src": "/notices", "dest": "api/notices.js" },
-    { "src": "/preferences", "dest": "api/preferences.js" }
+    { "src": "/(.*)", "dest": "api/index.js" }
   ]
 }
