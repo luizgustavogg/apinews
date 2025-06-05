@@ -1,5 +1,4 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import passport from "passport";
@@ -7,10 +6,10 @@ import session from "express-session";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import serverless from "serverless-http";
 import dotenv from "dotenv";
-dotenv.config();
+import '../libs/prisma'
+dotenv.config();  
 
 const app = express();
-const prisma = new PrismaClient();
 app.use(express.json());
 
 const SECRET = process.env.TOKEN;

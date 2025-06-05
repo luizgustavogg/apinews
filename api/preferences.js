@@ -1,5 +1,4 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import axios from "axios";
 import serverless from "serverless-http";
@@ -7,7 +6,6 @@ import serverless from "serverless-http";
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 
 app.use(express.json());
 
