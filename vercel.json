@@ -1,17 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install",
   "builds": [
-    { "src": "api.js", "use": "@vercel/node" },
-    { "src": "user.js", "use": "@vercel/node" },
-    { "src": "notices.js", "use": "@vercel/node" },
-    { "src": "preferences.js", "use": "@vercel/node" }
+    { "src": "api/index.js", "use": "@vercel/node" },
+    { "src": "api/user.js", "use": "@vercel/node" },
+    { "src": "api/notices.js", "use": "@vercel/node" },
+    { "src": "api/preferences.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api", "dest": "/api.js" },
-    { "src": "/user", "dest": "/user.js" },
-    { "src": "/notices", "dest": "/notices.js" },
-    { "src": "/preferences", "dest": "/preferences.js" }
+    { "src": "/api", "dest": "api/index.js" },
+    { "src": "/user", "dest": "api/user.js" },
+    { "src": "/notices", "dest": "api/notices.js" },
+    { "src": "/preferences", "dest": "api/preferences.js" }
   ]
 }
