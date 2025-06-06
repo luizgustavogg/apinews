@@ -161,7 +161,7 @@ app.get("/news-preferences", async (req, res) => {
       .join(",");
 
     const accessKey = process.env.accessKey;
-    const url = `${process.env.API_BASE_URL}?access_key=${process.env.accessKey}&countries=br&categories=${preferencesUser}&limit=100`;
+    const url = `${process.env.API_BASE_URL}?access_key=${accessKey}&countries=br&categories=${preferencesUser}&limit=100`;
     console.log('url', url);
 
     const response = await axios.get(url);
