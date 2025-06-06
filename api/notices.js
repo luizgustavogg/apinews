@@ -1,3 +1,4 @@
+// api/notices.js
 import express from "express";
 import dotenv from "dotenv";
 import axios from "axios";
@@ -11,7 +12,6 @@ app.use(express.json());
 
 const API_URL = process.env.API_URL;
 
-// 🔁 Função reutilizável com Redis embutido
 async function fetchAndCacheArticles(url, cacheKey, withImage = true) {
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached);
@@ -20,11 +20,10 @@ async function fetchAndCacheArticles(url, cacheKey, withImage = true) {
   let articles = response.data.data;
   articles = articles.filter(article => withImage ? article.image !== null : article.image == null);
 
-  await redis.set(cacheKey, JSON.stringify(articles), 'EX', 3600); // Cache 1h
+  await redis.set(cacheKey, JSON.stringify(articles), { ex: 3600 });
   return articles;
 }
 
-// 🔁 Função para categorizar
 function categorize(articles) {
   return articles.reduce((acc, article) => {
     const cat = article.category || "uncategorized";
@@ -34,7 +33,6 @@ function categorize(articles) {
   }, {});
 }
 
-// 🔹 /news-recent-image (com imagem)
 app.get("/news-recent-image", async (req, res) => {
   try {
     const articles = await fetchAndCacheArticles(API_URL, "news:recent:image", true);
@@ -44,7 +42,6 @@ app.get("/news-recent-image", async (req, res) => {
   }
 });
 
-// 🔹 /news-recent (sem imagem)
 app.get("/news-recent", async (req, res) => {
   try {
     const articles = await fetchAndCacheArticles(API_URL, "news:recent:noimage", false);
@@ -54,7 +51,6 @@ app.get("/news-recent", async (req, res) => {
   }
 });
 
-// 🔹 Categorias dinâmicas
 const categories = [
   { path: "/news-business", env: "API_URL_CATEGORY_BUSINESS", key: "category:business" },
   { path: "/news-entertainment", env: "API_URL_CATEGORY_ENTERTAINMENT", key: "category:entertainment" },
@@ -78,4 +74,5 @@ categories.forEach(({ path, env, key }) => {
   });
 });
 
+export const handler = serverless(app);
 export default app;
