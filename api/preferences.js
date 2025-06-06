@@ -162,6 +162,7 @@ app.get("/news-preferences", async (req, res) => {
 
     const accessKey = process.env.accessKey;
     const url = `${process.env.API_BASE_URL}?access_key=${process.env.accessKey}&countries=br&categories=${preferencesUser}&limit=100`;
+    console.log('url', url);
 
     const response = await axios.get(url);
     let articles = response.data.data;
