@@ -45,32 +45,45 @@ app.get("/auth/google", passport.authenticate("google", {
   scope: ["email", "profile"],
 }));
 
-app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), async (req, res) => {
-  const { displayName, emails } = req.user;
-  const email = emails[0].value;
+app.get("/auth/google/callback", (req, res, next) => {
+  passport.authenticate("google", async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({ message: "Falha na autenticação com o Google." });
+    }
 
-  let user = await prisma.user.findFirst({
-    where: { email }
-  });
+    try {
+      const { displayName, emails } = user;
+      const email = emails[0].value;
 
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        username: displayName,
-        email,
-        password: sha256(crypto.randomBytes(16).toString("hex")),
-      },
-    });
-  }
+      let existingUser = await prisma.user.findFirst({ where: { email } });
 
-  const token = jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: "1h" });
+      if (!existingUser) {
+        existingUser = await prisma.user.create({
+          data: {
+            username: displayName,
+            email,
+            password: sha256(crypto.randomBytes(16).toString("hex")),
+          },
+        });
+      }
 
-  res.status(200).json({
-    message: "Login realizado com sucesso!",
-    username: displayName,
-    email,
-    token,
-  });
+      const token = jwt.sign(
+        { id: existingUser.id, username: existingUser.username },
+        SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "Login realizado com sucesso!",
+        username: existingUser.username,
+        email: existingUser.email,
+        token,
+      });
+    } catch (error) {
+      console.error("Erro durante o login com Google:", error);
+      return res.status(500).json({ message: "Erro interno no servidor." });
+    }
+  })(req, res, next);
 });
 
 app.get("/logout", (req, res) => {
