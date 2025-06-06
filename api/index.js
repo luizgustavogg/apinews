@@ -6,8 +6,8 @@ dotenv.config();
 
 const app = express();
 
-// ROTA DE TESTE EXTREMAMENTE SIMPLES:
-app.get("/health", (req, res) => {
+// ROTA DE TESTE: agora “casa” exatamente /api/health
+app.get("/api/health", (req, res) => {
   return res.json({ status: "ok", timestamp: Date.now() });
 });
 
