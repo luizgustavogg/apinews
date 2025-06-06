@@ -1,24 +1,17 @@
 // api/notices.js
 import express from "express";
-import dotenv from "dotenv";
 import axios from "axios";
-import serverless from "serverless-http";
 import redis from "../libs/redis.js";
 
-dotenv.config();
-
-const app = express();
-app.use(express.json());
-
+import { Router } from "express";
+const router = Router();
 const API_URL = process.env.API_URL;
 
 async function fetchAndCacheArticles(url, cacheKey, withImage = true) {
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  console.time("fetchNews");
   const response = await axios.get(url, { timeout: 5000 });
-  console.timeEnd("fetchNews");
   let articles = response.data.data;
   articles = articles.filter((article) =>
     withImage ? article.image !== null : article.image == null
@@ -37,7 +30,7 @@ function categorize(articles) {
   }, {});
 }
 
-app.get("/news-recent-image", async (req, res) => {
+router.get("/news-recent-image", async (req, res) => {
   try {
     const articles = await fetchAndCacheArticles(
       API_URL,
@@ -50,7 +43,7 @@ app.get("/news-recent-image", async (req, res) => {
   }
 });
 
-app.get("/news-recent", async (req, res) => {
+router.get("/news-recent", async (req, res) => {
   try {
     const articles = await fetchAndCacheArticles(
       API_URL,
@@ -97,7 +90,7 @@ const categories = [
 ];
 
 categories.forEach(({ path, env, key }) => {
-  app.get(path, async (req, res) => {
+  router.get(path, async (req, res) => {
     try {
       const url = process.env[env];
       if (!url)
@@ -113,5 +106,4 @@ categories.forEach(({ path, env, key }) => {
   });
 });
 
-export const handler = serverless(app);
-export default app;
+export default router;

@@ -1,14 +1,8 @@
-import express from "express";
-import dotenv from "dotenv";
+import { Router } from "express";
 import axios from "axios";
-import serverless from "serverless-http";
 import prisma from "../libs/prisma.js";
 
-dotenv.config();
-
-const app = express();
-
-app.use(express.json());
+const router = Router();
 
 const verifyEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,7 +22,7 @@ function validateCategories(categories) {
   );
 }
 
-app.post("/preferences", async (req, res) => {
+router.post("/preferences", async (req, res) => {
   const { email, category } = req.body;
 
   if (!email || !category) {
@@ -92,7 +86,7 @@ app.post("/preferences", async (req, res) => {
   }
 });
 
-app.post("/preferences-remove", async (req, res) => {
+router.post("/preferences-remove", async (req, res) => {
   const { email, category } = req.body;
 
   if (!email || !category) {
@@ -136,7 +130,7 @@ app.post("/preferences-remove", async (req, res) => {
   }
 });
 
-app.get("/news-preferences", async (req, res) => {
+router.get("/news-preferences", async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -162,7 +156,7 @@ app.get("/news-preferences", async (req, res) => {
 
     const accessKey = process.env.accessKey;
     const url = `${process.env.API_BASE_URL}?access_key=${accessKey}&countries=br&categories=${preferencesUser}&limit=100`;
-    console.log('url', url);
+    console.log("url", url);
 
     const response = await axios.get(url);
     let articles = response.data.data;
@@ -182,4 +176,4 @@ app.get("/news-preferences", async (req, res) => {
   }
 });
 
-export default app;
+export default router;
