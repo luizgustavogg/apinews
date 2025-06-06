@@ -11,6 +11,11 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+app.get("/health", (req, res) => {
+  return res.json({ status: "ok", timestamp: Date.now() });
+});
+
+// Rotas originais
 app.use("/users", userRoutes);
 app.use("/notices", noticeRoutes);
 app.use("/preferences", preferenceRoutes);
