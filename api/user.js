@@ -2,7 +2,6 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import passport from "passport";
-import session from "express-session";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import serverless from "serverless-http";
 import dotenv from "dotenv";
@@ -15,16 +14,7 @@ app.use(express.json());
 
 const SECRET = process.env.TOKEN;
 
-app.use(
-  session({
-    secret: SECRET,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
 app.use(passport.initialize());
-app.use(passport.session());
 
 passport.use(
   new GoogleStrategy(
@@ -155,5 +145,4 @@ app.post("/login", async (req, res) => {
   });
 });
 
-export const handler = serverless(app);
 export default app;
