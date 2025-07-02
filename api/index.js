@@ -19,4 +19,4 @@ app.use("/users", userRoutes);
 app.use("/notices", noticeRoutes);
 app.use("/preferences", preferenceRoutes);
 
-export default serverless(app);
+export const handler = serverless(app);
