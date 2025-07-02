@@ -23,5 +23,5 @@ app.use("/users", userRoutes);
 app.use("/notices", noticeRoutes);
 app.use("/preferences", preferenceRoutes);
 
-// ⬇️ Aqui está o ponto chave para o deploy funcionar na Vercel
-export const handler = serverless(app);
+export default serverless(app);
+
