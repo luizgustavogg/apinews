@@ -5,16 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch api/index.js",
-    "dev-notices": "node --watch notices.js",
-    "dev-user": "node --watch user.js",
-    "dev-preference": "node --watch preferences.js",
-    "vercel-build": "prisma generate",
+    "build": "prisma generate",
     "generate": "prisma generate"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@prisma/client": "^6.9.0",
     "@upstash/redis": "^1.35.0",
@@ -22,12 +15,9 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "express-session": "^1.18.1",
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "newsapi": "^2.4.1",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
