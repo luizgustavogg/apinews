@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch api.js",
+    "dev": "node --watch api/index.js",
     "dev-notices": "node --watch notices.js",
     "dev-user": "node --watch user.js",
     "dev-preference": "node --watch preferences.js",
