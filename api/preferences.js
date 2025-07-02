@@ -1,3 +1,5 @@
+// api/preferences.js
+
 import { Router } from "express";
 import axios from "axios";
 import prisma from "../libs/prisma.js";
